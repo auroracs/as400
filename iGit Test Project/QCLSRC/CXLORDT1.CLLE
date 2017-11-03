@@ -1,0 +1,68 @@
+000100170526
+000200170526
+000300170526/* manually cancel jet order  */
+000400170526
+000500170526
+000600170508 pgm
+000700140114
+000800170605   dcl  &response  *char  (2000)
+000900170605   dcl  &resp      *char  (200)
+001000170426
+001100170512   dcl  &classlib2 *char  (500)
+001200160110   dcl  &cmpy      *char  (3)
+001300160110   dcl  &user      *char  (10)
+001400170526   dcl  &lib       *char  (10) value('JETTEST   ')
+001500170912   dcl  &dmmsord   *char  (17) value('09112017-3600-003')
+001600170526   dcl  &pbnum     *char  (7) value('0000001')
+001700170912   dcl  &merchord  *char  (32) value('fdebdae7d3c9414bac3260cb848d5c18')
+001800170912   dcl  &sku       *char  (10) value('H24RDCC12 ')
+001900170526   dcl  &qty       *char  (2) value('1 ')
+002000170526
+002100170220   dclprcopt dftactgrp(*no) bnddir(DEIPROCS)
+002200170220
+002300170605   addlible JETTEST position(*first)
+002400170605   monmsg cpf0000
+002500170605
+002600170508   rtvjoba user(&user)
+002700170508   call MNU005 parm(&user 'N')
+002800170508   rtvdtaara dtaara(*lda (100 3)) rtnvar(&cmpy)
+002900170508
+003000170512   /* setup classpath for walmart java job                       */
+003100170526   callsubr subr(SETJETPATH)
+003200170512
+003300170512   ovrprtf QPRINT tofile(jime/QPRINTJVM)
+003400170526   runjva class(com.dei.jet.test.CancelAcknowledgedOrder) +
+003500170912     parm(&dmmsord &pbnum &merchord &sku &qty) job(JVMCALLTST) output(*print)
+003600170526
+003700170605   rmvlible JETTEST
+003800170605   monmsg cpf0000
+003900170605
+004000150326   goto EXIT
+004100150326
+004200170512   /* ********************************************************** */
+004300170526   /* Set classpath for Jet                                      */
+004400170512   /* ********************************************************** */
+004500170508
+004600170526   subr subr(SETJETPATH)
+004700170508
+004800170512      /* Make classlib the current directory                     */
+004900170526      cd dir('/jet/')
+005000170508
+005100170512      /* create CLASSPATH var with need JAR files                */
+005200170526      callprc prc('BUILDCLASSLIB') parm(&cmpy 'JTPS') +
+005300170512         rtnval(&classlib2)
+005400170508
+005500170526      chgvar &classlib2 value('/jet/:' *tcat &classlib2)
+005600170508
+005700170512      addenvvar envvar(CLASSPATH) value(&classlib2) replace(*yes)
+005800170508      monmsg CPFA980
+005900170508
+006000170508   endsubr
+006100170508
+006200170512   /* ********************************************************** */
+006300170512   /* Exit Routine                                               */
+006400170512   /* ********************************************************** */
+006500160111
+006600150324EXIT:
+006700140323 endpgm
+006800140322

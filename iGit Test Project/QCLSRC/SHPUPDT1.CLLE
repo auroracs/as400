@@ -1,0 +1,78 @@
+000100170526
+000200170526/* manually ship confirm order that has failed */
+000300170526
+000400170508 pgm
+000500171001
+000600171001/* change these order fields. All others can remain as they are.              */
+000700171001
+000800171014   dcl  &dmmsord   *char  (17) value('10132017-3600-001')
+000900171014   dcl  &pbnum     *char  (7) value('2860494')
+001000171014   dcl  &tracking  *char  (15) value('745037736995   ')
+001100171014   dcl  &shpdate   *char  (33) value('2017-10-14T13:16:33.0000000-07:00')
+001200171014   dcl  &pckupdate *char  (33) value('2017-10-14T13:16:33.0000000-07:00')
+001300171014   dcl  &deldate   *char  (33) value('2017-10-17T14:00:00.0000000-07:00')
+001400171014   dcl  &merchord  *char  (32) value('485ce6b0893843fc8886d10f3a2bb837')
+001500171014   dcl  &sku       *char  (10) value('156579    ')
+001600171014   dcl  &qty       *char  (2) value('1 ')
+001700171001
+001800171001   dcl  &response  *char  (2000)
+001900171001   dcl  &classlib  *char  (500)
+002000160110   dcl  &cmpy      *char  (3)
+002100170707   dcl  &site      *char  (4)  value('JTPS')
+002200160110   dcl  &user      *char  (10)
+002300170707   dcl  &lib       *char  (10) value('AS#DFC    ')
+002400170707   dcl  &ip        *char  (15) value('192.123.123.1  ')
+002500170707   dcl  &runcod9   *dec   (9 0)
+002600170707   dcl  &runcod    *char  (10)
+002700170526
+002800170220   dclprcopt dftactgrp(*no) bnddir(DEIPROCS)
+002900170220
+003000170508   rtvjoba user(&user)
+003100170508   call MNU005 parm(&user 'N')
+003200170508   rtvdtaara dtaara(*lda (100 3)) rtnvar(&cmpy)
+003300170508
+003400170512   /* setup classpath for walmart java job                       */
+003500170526   callsubr subr(SETJETPATH)
+003600170512
+003700170707   /* get next java run code                                  */
+003800171001   callprc prc('GETNEXTJAVARUNCODE') parm(&cmpy &site) rtnval(&runcod9)
+003900170707
+004000170707   chgvar &runcod value(&runcod9)
+004100170707   chgvar &runcod value('J' *cat %sst(&runcod 2 9))
+004200170707
+004300170526   runjva class(com.dei.jet.test.UpdateSkuShippingInfo) +
+004400170526     parm(&dmmsord &pbnum &tracking &shpdate &pckupdate &deldate &merchord +
+004500171001          &sku &qty &lib &ip &cmpy &runcod) job(JETSHPCONF) output(*print)
+004600170526
+004700170707   /* get response                                            */
+004800171010   callprc prc('GETJAVARESPONSE') parm(&cmpy &runcod) rtnval(&response)
+004900170707
+005000150326   goto EXIT
+005100150326
+005200170512   /* ********************************************************** */
+005300170526   /* Set classpath for Jet                                      */
+005400170512   /* ********************************************************** */
+005500170508
+005600170526   subr subr(SETJETPATH)
+005700170508
+005800170512      /* Make classlib the current directory                     */
+005900170526      cd dir('/jet/')
+006000170508
+006100170512      /* create CLASSPATH var with need JAR files                */
+006200171001      callprc prc('BUILDCLASSLIB') parm(&cmpy 'JTPS') rtnval(&classlib)
+006300170508
+006400171001      chgvar &classlib value(%sst(&classlib 3 498))
+006500171001      chgvar &classlib value('/jet/:' *tcat &classlib)
+006600170508
+006700171001      addenvvar envvar(CLASSPATH) value(&classlib) replace(*yes)
+006800170508      monmsg CPFA980
+006900170508
+007000170508   endsubr
+007100170508
+007200170512   /* ********************************************************** */
+007300170512   /* Exit Routine                                               */
+007400170512   /* ********************************************************** */
+007500160111
+007600150324EXIT:
+007700140323 endpgm
+007800140322

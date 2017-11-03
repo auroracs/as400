@@ -1,0 +1,9 @@
+000100160108     A                                      REF(FLDREF)
+000200160316     A          R JETIMGR
+000300080706
+000400150506     A            CMPY           3A         TEXT('COMPANY CODE')
+000500150506     A            SITE           4A         TEXT('SITE')
+000600160316     A            SKU           27A         TEXT('SKU')
+000700160317     A            STATUS         1A         TEXT('STATUS A-ACTIVE, I-INACTIVE')
+000800160108     A            LRGIMGURL    500A         TEXT('LARGE IMAGE URL')
+000900160108
